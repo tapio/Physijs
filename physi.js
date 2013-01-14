@@ -2,6 +2,7 @@
 
 window.Physijs = (function() {
 	var THREE_REVISION = parseInt( THREE.REVISION, 10 ),
+		SUPPORT_TRANSFERABLE,
 		_matrix = new THREE.Matrix4, _is_simulating = false,
 		_Physijs = Physijs, // used for noConflict method
 		Physijs = {}, // object assigned to window.Physijs
@@ -392,11 +393,16 @@ window.Physijs = (function() {
 		THREE.Scene.call( this );
 
 		this._worker = new Worker( Physijs.scripts.worker || 'physijs_worker.js' );
+		this._worker.transferableMessage = this._worker.webkitPostMessage || this._worker.postMessage;
 		this._materials = {};
 		this._objects = {};
 		this._vehicles = {};
 		this._constraints = {};
-		
+
+		var ab = new ArrayBuffer(1);
+		this._worker.transferableMessage(ab, [ab]);
+		SUPPORT_TRANSFERABLE = (ab.byteLength === 0);
+
 		this._worker.onmessage = function ( event ) {
 			var _temp;
 
@@ -538,9 +544,9 @@ window.Physijs = (function() {
 
 		}
 
-		if ( this._worker.webkitPostMessage ) {
+		if ( SUPPORT_TRANSFERABLE ) {
 			// Give the typed array back to the worker
-			this._worker.webkitPostMessage( data, [data.buffer] );
+			this._worker.transferableMessage( data, [data.buffer] );
 		}
 
 		_is_simulating = false;
@@ -585,9 +591,9 @@ window.Physijs = (function() {
 
 		}
 
-		if ( this._worker.webkitPostMessage ) {
+		if ( SUPPORT_TRANSFERABLE ) {
 			// Give the typed array back to the worker
-			this._worker.webkitPostMessage( data, [data.buffer] );
+			this._worker.transferableMessage( data, [data.buffer] );
 		}
 	};
 
@@ -616,9 +622,9 @@ window.Physijs = (function() {
 			constraint.appliedImpulse = data[ offset + 5 ] ;
 		}
 
-		if ( this._worker.webkitPostMessage ) {
+		if ( SUPPORT_TRANSFERABLE ) {
 			// Give the typed array back to the worker
-			this._worker.webkitPostMessage( data, [data.buffer] );
+			this._worker.transferableMessage( data, [data.buffer] );
 		}
 	};
 
@@ -687,9 +693,9 @@ window.Physijs = (function() {
 
 		}
 
-		if ( this._worker.webkitPostMessage ) {
+		if ( SUPPORT_TRANSFERABLE ) {
 			// Give the typed array back to the worker
-			this._worker.webkitPostMessage( data, [data.buffer] );
+			this._worker.transferableMessage( data, [data.buffer] );
 		}
 	};
 
